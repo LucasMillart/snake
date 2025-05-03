@@ -1,4 +1,7 @@
 @import "tailwindcss";
+@plugin "daisyui" {
+  themes: light --default, dark --prefersdark;
+}
 
 :root {
   --background: #ffffff;
@@ -10,6 +13,9 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  
+  /* Amélioration des couleurs de base pour un meilleur contraste */
+  --color-base-content: oklch(20% 0.05 240);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -23,4 +29,30 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+/* Styles spécifiques pour le jeu Snake Sport */
+.game-container {
+  touch-action: none;
+  -webkit-user-select: none; /* Safari */
+  user-select: none;
+}
+
+.endurance-bar {
+  transition: width 0.2s ease-out;
+}
+
+.snake-canvas {
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.score-pulse {
+  animation: pulse 0.5s ease-out;
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+  100% { transform: scale(1); }
 }

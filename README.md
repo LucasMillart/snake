@@ -1,36 +1,66 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# 🐍 Snake Sport
 
-## Getting Started
+Une version moderne et sportive du célèbre jeu Snake, développée avec Next.js, React et MongoDB.
 
-First, run the development server:
+## 🌟 Fonctionnalités
 
+- **Gameplay moderne** du jeu Snake avec des graphiques canvas
+- **Éléments sportifs** : barre d'endurance et chaussures de sport pour booster la vitesse
+- **Mode Sprint** : appuyez sur la barre d'espace pour accélérer (attention à l'endurance!)
+- **Classement des scores** stocké dans MongoDB
+- **Interface utilisateur réactive** construite avec TailwindCSS et DaisyUI
+- **Application entièrement responsive** pour mobile et desktop
+
+## 🚀 Technologies utilisées
+
+- **Frontend** : React 19, Next.js 15 (App Router)
+- **Styling** : TailwindCSS v4, DaisyUI v5
+- **Backend** : API Routes Next.js
+- **Base de données** : MongoDB avec Mongoose
+- **Déploiement** : Optimisé pour Vercel
+
+## 🛠️ Installation locale
+
+1. Clonez ce dépôt
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+git clone https://github.com/votre-username/snake-sport.git
+cd snake-sport
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+2. Installez les dépendances
+```bash
+npm install
+```
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+3. Créez un fichier `.env.local` avec votre URI MongoDB
+```
+MONGODB_URI=votre_uri_mongodb
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+4. Lancez le serveur de développement
+```bash
+npm run dev
+```
 
-## Learn More
+5. Ouvrez [http://localhost:3000](http://localhost:3000) dans votre navigateur
 
-To learn more about Next.js, take a look at the following resources:
+## 🌐 Déploiement sur Vercel
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Cette application est optimisée pour un déploiement sur Vercel :
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+1. Créez un compte sur [Vercel](https://vercel.com) si ce n'est pas déjà fait
+2. Connectez votre dépôt GitHub à Vercel
+3. Configurez la variable d'environnement `MONGODB_URI` dans les paramètres du projet
+4. Déployez !
 
-## Deploy on Vercel
+## 🎮 Comment jouer
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- Utilisez les **flèches directionnelles** pour guider le serpent
+- Appuyez sur **espace** pour sprinter (consomme de l'endurance)
+- Ramassez des **bananes** 🍌 pour marquer des points
+- Collectez des **chaussures de sport** 👟 pour un bonus temporaire de vitesse
+- Votre **endurance** se régénère lorsque vous ne sprintez pas
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## 📄 License
+
+MIT
