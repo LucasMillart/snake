@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 
-export default function ScoreForm({ score, onSubmitComplete }) {
+export default function ScoreForm({ score, onSubmitComplete, onCancel }) {
   const [name, setName] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState(null);
@@ -58,7 +58,7 @@ export default function ScoreForm({ score, onSubmitComplete }) {
   }
 
   return (
-    <div className="mt-2 mb-4">
+    <div className="w-full">
       <h3 className="text-lg font-bold mb-2">Enregistrer votre score: {score}</h3>
 
       {error && (
@@ -86,20 +86,33 @@ export default function ScoreForm({ score, onSubmitComplete }) {
           />
         </div>
 
-        <button
-          type="submit"
-          className="btn btn-primary mt-4 w-full"
-          disabled={isSubmitting}
-        >
-          {isSubmitting ? (
-            <>
-              <span className="loading loading-spinner loading-sm"></span>
-              Enregistrement...
-            </>
-          ) : (
-            'Enregistrer mon score'
+        <div className="flex gap-2 mt-4">
+          <button
+            type="submit"
+            className="btn btn-primary flex-1"
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? (
+              <>
+                <span className="loading loading-spinner loading-sm"></span>
+                Enregistrement...
+              </>
+            ) : (
+              'Enregistrer'
+            )}
+          </button>
+
+          {onCancel && (
+            <button
+              type="button"
+              className="btn btn-ghost"
+              onClick={onCancel}
+              disabled={isSubmitting}
+            >
+              Annuler
+            </button>
           )}
-        </button>
+        </div>
       </form>
     </div>
   );

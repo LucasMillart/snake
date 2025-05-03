@@ -1,10 +1,11 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
+import GameOver from './GameOver';
 
 // Constantes du jeu
-const GRID_SIZE = 20; // Taille de la grille (20x20)
-const CELL_SIZE = 20; // Taille d'une cellule en pixels
+const GRID_SIZE = 25; // Taille de la grille (augmentée de 20x20 à 25x25)
+const CELL_SIZE = 24; // Taille d'une cellule en pixels (augmentée de 20 à 24)
 const GAME_SPEED = 100; // Vitesse de base du jeu en ms
 const SPRINT_SPEED = 50; // Vitesse en mode sprint
 const SPRINT_DRAIN_RATE = 1; // Taux de diminution de l'endurance
@@ -54,8 +55,8 @@ export default function SnakeGame({ onGameOver }) {
   // Générer une position aléatoire dans la grille
   const getRandomPosition = useCallback(() => {
     return {
-      x: Math.floor(Math.random() * GRID_SIZE),
-      y: Math.floor(Math.random() * GRID_SIZE),
+      x: Math.random() * GRID_SIZE | 0,
+      y: Math.random() * GRID_SIZE | 0,
     };
   }, []);
 
@@ -204,6 +205,37 @@ export default function SnakeGame({ onGameOver }) {
 
   }, [isSprinting]);
 
+  // Activer un power-up
+  const activatePowerUp = useCallback((type) => {
+    if (type === 'shoe') {
+      setActivePowerUps((prev) => ({ ...prev, shoe: true }));
+
+      // Réinitialiser l'endurance
+      setEndurance(100);
+
+      // Définir un délai pour désactiver le power-up
+      if (gameState.current.powerUpTimeout) {
+        clearTimeout(gameState.current.powerUpTimeout);
+      }
+
+      gameState.current.powerUpTimeout = setTimeout(() => {
+        setActivePowerUps((prev) => ({ ...prev, shoe: false }));
+      }, 5000); // 5 secondes de bonus
+    }
+  }, []);
+
+  // Gérer la fin du jeu
+  const handleGameOver = useCallback(() => {
+    setGameOver(true);
+    clearInterval(gameState.current.gameLoop);
+    if (gameState.current.powerUpTimeout) {
+      clearTimeout(gameState.current.powerUpTimeout);
+    }
+    if (onGameOver) {
+      onGameOver(score);
+    }
+  }, [score, onGameOver]);
+
   // Mettre à jour l'état du jeu
   const updateGame = useCallback(() => {
     if (gameOver || isPaused) return;
@@ -264,93 +296,41 @@ export default function SnakeGame({ onGameOver }) {
 
     // Dessiner le jeu
     drawGame();
-  }, [drawGame, generateFood, isPositionOccupied, gameOver, isPaused, isSprinting]);
+  }, [drawGame, generateFood, isPositionOccupied, gameOver, isPaused, isSprinting, handleGameOver, activatePowerUp, endurance]);
 
-  // Gérer la fin du jeu
-  const handleGameOver = useCallback(() => {
-    setGameOver(true);
-    clearInterval(gameState.current.gameLoop);
+  // Démarrer la boucle de jeu
+  const startGameLoop = useCallback(() => {
+    if (gameState.current.gameLoop) {
+      clearInterval(gameState.current.gameLoop);
+    }
+
+    gameState.current.gameLoop = setInterval(() => {
+      updateGame();
+    }, isSprinting || activePowerUps.shoe ? SPRINT_SPEED : GAME_SPEED);
+
+    return () => {
+      clearInterval(gameState.current.gameLoop);
+    };
+  }, [updateGame, isSprinting, activePowerUps.shoe]);
+
+  // Initialiser le jeu - Fonction pour réinitialiser le jeu
+  const initGameRef = useRef();
+
+  // Réinitialiser le jeu
+  const resetGame = useCallback(() => {
+    if (gameState.current.gameLoop) {
+      clearInterval(gameState.current.gameLoop);
+    }
+
     if (gameState.current.powerUpTimeout) {
       clearTimeout(gameState.current.powerUpTimeout);
     }
-    if (onGameOver) {
-      onGameOver(score);
-    }
-  }, [score, onGameOver]);
 
-  // Activer un power-up
-  const activatePowerUp = useCallback((type) => {
-    if (type === 'shoe') {
-      setActivePowerUps((prev) => ({ ...prev, shoe: true }));
-
-      // Réinitialiser l'endurance
-      setEndurance(100);
-
-      // Définir un délai pour désactiver le power-up
-      if (gameState.current.powerUpTimeout) {
-        clearTimeout(gameState.current.powerUpTimeout);
-      }
-
-      gameState.current.powerUpTimeout = setTimeout(() => {
-        setActivePowerUps((prev) => ({ ...prev, shoe: false }));
-      }, 5000); // 5 secondes de bonus
-    }
+    // Utiliser la référence à initGame
+    initGameRef.current();
   }, []);
 
-  // Gérer les entrées clavier
-  const handleKeyDown = useCallback((event) => {
-    const { direction } = gameState.current;
-
-    switch (event.key) {
-      case 'ArrowUp':
-        if (direction !== DIRECTIONS.DOWN) {
-          gameState.current.nextDirection = DIRECTIONS.UP;
-        }
-        break;
-      case 'ArrowDown':
-        if (direction !== DIRECTIONS.UP) {
-          gameState.current.nextDirection = DIRECTIONS.DOWN;
-        }
-        break;
-      case 'ArrowLeft':
-        if (direction !== DIRECTIONS.RIGHT) {
-          gameState.current.nextDirection = DIRECTIONS.LEFT;
-        }
-        break;
-      case 'ArrowRight':
-        if (direction !== DIRECTIONS.LEFT) {
-          gameState.current.nextDirection = DIRECTIONS.RIGHT;
-        }
-        break;
-      case ' ':
-        // Barre d'espace pour sprint
-        if (endurance > 0) {
-          setIsSprinting(true);
-        }
-        break;
-      case 'p':
-        // Pause
-        setIsPaused(prev => !prev);
-        break;
-      case 'r':
-        // Redémarrer
-        if (gameOver) {
-          resetGame();
-        }
-        break;
-      default:
-        break;
-    }
-  }, [endurance]);
-
-  // Relâchement de touche
-  const handleKeyUp = useCallback((event) => {
-    if (event.key === ' ') {
-      setIsSprinting(false);
-    }
-  }, []);
-
-  // Initialiser le jeu
+  // Définition de la fonction initGame
   const initGame = useCallback(() => {
     // Réinitialiser les états
     gameState.current.snake = [{ x: 10, y: 10 }];
@@ -388,35 +368,79 @@ export default function SnakeGame({ onGameOver }) {
     return () => {
       clearInterval(countdownInterval);
     };
-  }, [generateFood, drawGame]);
+  }, [generateFood, drawGame, startGameLoop]);
 
-  // Démarrer la boucle de jeu
-  const startGameLoop = useCallback(() => {
-    if (gameState.current.gameLoop) {
-      clearInterval(gameState.current.gameLoop);
-    }
-
-    gameState.current.gameLoop = setInterval(() => {
-      updateGame();
-    }, isSprinting || activePowerUps.shoe ? SPRINT_SPEED : GAME_SPEED);
-
-    return () => {
-      clearInterval(gameState.current.gameLoop);
-    };
-  }, [updateGame, isSprinting, activePowerUps.shoe]);
-
-  // Réinitialiser le jeu
-  const resetGame = useCallback(() => {
-    if (gameState.current.gameLoop) {
-      clearInterval(gameState.current.gameLoop);
-    }
-
-    if (gameState.current.powerUpTimeout) {
-      clearTimeout(gameState.current.powerUpTimeout);
-    }
-
-    initGame();
+  // Assigner la fonction initGame à initGameRef quand elle est définie
+  useEffect(() => {
+    initGameRef.current = initGame;
   }, [initGame]);
+
+  // Gérer les entrées clavier
+  const handleKeyDown = useCallback((event) => {
+    const { direction } = gameState.current;
+
+    // Empêcher le défilement de la fenêtre avec les touches fléchées et espace
+    if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' '].includes(event.key)) {
+      event.preventDefault();
+    }
+
+    // Arrêter la propagation pour éviter que l'espace n'active d'autres éléments
+    if (event.key === ' ') {
+      event.stopPropagation();
+    }
+
+    if (event.repeat) return; // Ignorer les événements de répétition de touche
+
+    switch (event.key) {
+      case 'ArrowUp':
+        if (direction !== DIRECTIONS.DOWN) {
+          gameState.current.nextDirection = DIRECTIONS.UP;
+        }
+        break;
+      case 'ArrowDown':
+        if (direction !== DIRECTIONS.UP) {
+          gameState.current.nextDirection = DIRECTIONS.DOWN;
+        }
+        break;
+      case 'ArrowLeft':
+        if (direction !== DIRECTIONS.RIGHT) {
+          gameState.current.nextDirection = DIRECTIONS.LEFT;
+        }
+        break;
+      case 'ArrowRight':
+        if (direction !== DIRECTIONS.LEFT) {
+          gameState.current.nextDirection = DIRECTIONS.RIGHT;
+        }
+        break;
+      case 'Shift': // Utiliser uniquement 'Shift' au lieu de ShiftLeft/ShiftRight
+      case ' ':     // Barre d'espace pour le sprint
+        // Activer le sprint uniquement quand le jeu est en cours et qu'il reste de l'endurance
+        if (!gameOver && !isPaused && endurance > 0) {
+          setIsSprinting(true);
+        }
+        break;
+      case 'p':
+        // Pause
+        setIsPaused(prev => !prev);
+        break;
+      case 'r':
+        // Redémarrer
+        if (gameOver) {
+          resetGame();
+        }
+        break;
+      default:
+        break;
+    }
+  }, [endurance, gameOver, isPaused, resetGame]);
+
+  // Relâchement de touche
+  const handleKeyUp = useCallback((event) => {
+    if (event.key === 'Shift' || event.key === ' ') {
+      // Désactiver le sprint
+      setIsSprinting(false);
+    }
+  }, []);
 
   // Effet d'initialisation du jeu
   useEffect(() => {
@@ -425,7 +449,8 @@ export default function SnakeGame({ onGameOver }) {
       canvas.width = GRID_SIZE * CELL_SIZE;
       canvas.height = GRID_SIZE * CELL_SIZE;
 
-      initGame();
+      // Utiliser la référence à initGame
+      initGameRef.current();
     }
 
     return () => {
@@ -436,12 +461,13 @@ export default function SnakeGame({ onGameOver }) {
         clearTimeout(gameState.current.powerUpTimeout);
       }
     };
-  }, [initGame]);
+  }, []);
 
   // Effet pour mettre à jour la boucle de jeu lorsque le mode sprint change
   useEffect(() => {
     if (!showCountdown && !gameOver && !isPaused) {
-      return startGameLoop();
+      const cleanupFunction = startGameLoop();
+      return cleanupFunction;
     }
   }, [isSprinting, activePowerUps.shoe, showCountdown, gameOver, isPaused, startGameLoop]);
 
@@ -459,10 +485,13 @@ export default function SnakeGame({ onGameOver }) {
   return (
     <div className="flex flex-col items-center">
       {/* HUD supérieur */}
-      <div className="w-full md:w-[400px] mb-2 flex justify-between items-center">
+      <div className="w-full md:w-[600px] mb-2 flex justify-between items-center">
         <div className="flex items-center gap-2">
           <span className="text-lg font-bold">Score:</span>
           <span className="text-lg">{score}</span>
+          {isSprinting && (
+            <div className="badge badge-error animate-pulse ml-2">Sprint</div>
+          )}
         </div>
 
         {/* Power-ups actifs */}
@@ -476,7 +505,7 @@ export default function SnakeGame({ onGameOver }) {
       </div>
 
       {/* Barre d'endurance */}
-      <div className="w-full md:w-[400px] h-2 bg-base-300 rounded-full mb-2 overflow-hidden">
+      <div className="w-full md:w-[600px] h-2 bg-base-300 rounded-full mb-2 overflow-hidden">
         <div
           className={`h-full endurance-bar ${endurance < 30 ? 'bg-error' : endurance < 70 ? 'bg-warning' : 'bg-success'}`}
           style={{ width: `${endurance}%` }}
@@ -508,18 +537,15 @@ export default function SnakeGame({ onGameOver }) {
 
         {/* Overlay de fin de jeu */}
         {gameOver && !isPaused && (
-          <div className="absolute inset-0 flex items-center justify-center bg-base-100 bg-opacity-80">
-            <div className="text-center">
-              <h3 className="text-2xl font-bold mb-2">Game Over</h3>
-              <p className="text-xl mb-4">Score: {score}</p>
-              <button
-                className="btn btn-primary"
-                onClick={resetGame}
-              >
-                Rejouer
-              </button>
-            </div>
-          </div>
+          <GameOver
+            score={score}
+            onRestart={resetGame}
+            onSubmitComplete={() => {
+              if (onGameOver) {
+                onGameOver(score);
+              }
+            }}
+          />
         )}
 
         {/* Overlay de compte à rebours */}
@@ -531,19 +557,6 @@ export default function SnakeGame({ onGameOver }) {
             </div>
           </div>
         )}
-      </div>
-
-      {/* Instructions */}
-      <div className="mt-4 p-4 bg-base-200 rounded-lg max-w-md">
-        <h3 className="font-bold mb-2">Comment jouer:</h3>
-        <ul className="list-disc pl-5 space-y-1">
-          <li>Utilisez les <span className="font-bold">flèches directionnelles</span> pour guider le serpent</li>
-          <li>Appuyez sur <span className="font-bold">espace</span> pour sprinter (consomme de l'endurance)</li>
-          <li>Ramassez des <span className="font-bold text-yellow-500">bananes</span> pour marquer des points</li>
-          <li>Les <span className="font-bold text-blue-500">chaussures</span> donnent un boost temporaire de vitesse</li>
-          <li>Appuyez sur <span className="font-bold">P</span> pour mettre en pause</li>
-          <li>Appuyez sur <span className="font-bold">R</span> pour recommencer si le jeu est terminé</li>
-        </ul>
       </div>
     </div>
   );

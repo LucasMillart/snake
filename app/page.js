@@ -3,36 +3,26 @@
 import { useState } from 'react';
 import SnakeGame from './components/SnakeGame';
 import ScoreTable from './components/ScoreTable';
-import ScoreForm from './components/ScoreForm';
 import { Suspense } from 'react';
 
 export default function Home() {
   const [gameActive, setGameActive] = useState(false);
-  const [currentScore, setCurrentScore] = useState(0);
-  const [showScoreForm, setShowScoreForm] = useState(false);
   const [tableKey, setTableKey] = useState(0);
 
   const handleStartGame = () => {
     setGameActive(true);
-    setShowScoreForm(false);
   };
 
   const handleGameOver = (score) => {
-    setCurrentScore(score);
-    if (score > 0) {
-      setShowScoreForm(true);
-    }
-  };
-
-  const handleScoreSubmitted = () => {
+    // Cette fonction est appelée uniquement lorsqu'un score est effectivement soumis
     // Forcer le rechargement du tableau des scores après l'enregistrement
     setTableKey(prevKey => prevKey + 1);
   };
 
   return (
-    <div className="min-h-screen flex flex-col text-base-content">
+    <div className="min-h-screen flex flex-col text-base-content bg-blue-50">
       {/* Header */}
-      <header className="p-4 bg-base-200">
+      <header className="p-4 bg-purple-900 text-white">
         <div className="container mx-auto">
           <h1 className="text-3xl font-bold text-center">
             🐍 Snake <span className="text-primary">Sport</span> 👟
@@ -50,13 +40,6 @@ export default function Home() {
               <div className="card bg-base-100 shadow-xl">
                 <div className="card-body">
                   <SnakeGame onGameOver={handleGameOver} />
-
-                  {showScoreForm && (
-                    <ScoreForm
-                      score={currentScore}
-                      onSubmitComplete={handleScoreSubmitted}
-                    />
-                  )}
                 </div>
               </div>
             ) : (
@@ -76,6 +59,58 @@ export default function Home() {
                 </div>
               </div>
             )}
+            {/* Carte d'instructions */}
+            {gameActive &&
+              <div className="card bg-base-100 shadow-xl mt-4">
+                <div className="card-body">
+                  <h2 className="card-title">Comment jouer 🎮</h2>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <h3 className="font-bold mb-2">Commandes :</h3>
+                      <ul className="list space-y-1">
+                        <li className="list-row">
+                          <span className="badge badge-neutral">↑ ↓ ← →</span>
+                          <span>Diriger le serpent</span>
+                        </li>
+                        <li className="list-row">
+                          <span className="badge badge-neutral">Espace</span>
+                          <span>Sprint (consomme de l&apos;endurance)</span>
+                        </li>
+                        <li className="list-row">
+                          <span className="badge badge-neutral">P</span>
+                          <span>Pause / Reprendre</span>
+                        </li>
+                        <li className="list-row">
+                          <span className="badge badge-neutral">R</span>
+                          <span>Recommencer (après Game Over)</span>
+                        </li>
+                      </ul>
+                      <div className="alert alert-info mt-3">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" className="stroke-current shrink-0 w-6 h-6"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        <span>Pendant le jeu, la fenêtre du navigateur ne défile pas avec les touches fléchées.</span>
+                      </div>
+                    </div>
+                    <div>
+                      <h3 className="font-bold mb-2">Éléments du jeu :</h3>
+                      <ul className="list space-y-1">
+                        <li className="list-row">
+                          <span className="badge badge-warning">🍌</span>
+                          <span>Bananes - Donnent 10 points</span>
+                        </li>
+                        <li className="list-row">
+                          <span className="badge badge-info">👟</span>
+                          <span>Chaussures - Boost de vitesse temporaire</span>
+                        </li>
+                        <li className="list-row">
+                          <span className="badge badge-success">⚡</span>
+                          <span>Barre verte - Endurance disponible</span>
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            }
           </div>
 
           {/* Colonne de droite - Scores */}
