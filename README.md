@@ -44,14 +44,6 @@ npm run dev
 
 5. Ouvrez [http://localhost:3000](http://localhost:3000) dans votre navigateur
 
-## 🌐 Déploiement sur Vercel
-
-Cette application est optimisée pour un déploiement sur Vercel :
-
-1. Créez un compte sur [Vercel](https://vercel.com) si ce n'est pas déjà fait
-2. Connectez votre dépôt GitHub à Vercel
-3. Configurez la variable d'environnement `MONGODB_URI` dans les paramètres du projet
-4. Déployez !
 
 ## 🎮 Comment jouer
 
